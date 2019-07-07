@@ -76,8 +76,9 @@ datatype move = Discard of card | Draw
 
 exception IllegalMove
 
-(* put your solutions for problem 2 here *)
+(* Solutions for problem 2 *)
 
+(* 2 (a) *)
 fun card_color (aCard: card) =
 	let val (s: suit, r: rank) = aCard
 	in
@@ -87,16 +88,59 @@ fun card_color (aCard: card) =
 			| _ => Red
 	end
 
+(* 2 (b) *)
+fun card_value (aCard: card) =
+	let val (s: suit, r: rank) = aCard 
+	in
+		case r of
+			Ace => 11
+			| Num i => i
+			| _ => 10
+	end
 
+(* 2 (c) *)
+fun remove_card (listOfCards, c, e) =
+	case listOfCards of
+		[] => raise e
+		| [x] => if x = c then [] else remove_card ([], c, e)
+		| hd:: tl => if hd = c then tl
+					 else hd :: remove_card (tl, c, e)
 
+(* 2 (d) *)
+fun all_same_color (listOfCards) =
+	case listOfCards of
+		[] => true
+		| [e] => true
+		| hd :: e :: tl => if card_color (hd) = card_color (e)
+						   then all_same_color (e :: tl)
+						   else false
 
+(* 2 (e) *)
+fun sum_cards (listOfCards) =
+	let 
+		fun sum_cards_helper (lol, result) =
+			case lol of
+				[] => result
+				| hd :: tl => sum_cards_helper (tl, card_value (hd) + result)
+	in
+		sum_cards_helper (listOfCards, 0)
+	end
 
+(* 2 (f) *)
+fun score (listOfCards, target) =
+	let val total = sum_cards (listOfCards)
+	in
+		let val preliminary_score = if total > target 
+									then 3 * (total - target)
+									else (target - total)
+		in
+			if all_same_color (listOfCards)
+			then preliminary_score div 2
+			else preliminary_score
+		end
+	end
 
-
-
-
-
-
+(* 2 (g) *)
 
 
 
