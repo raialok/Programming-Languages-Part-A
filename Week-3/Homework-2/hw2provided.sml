@@ -140,10 +140,6 @@ fun score (listOfCards, target) =
 		end
 	end
 
-(* 2 (g) *)
-
-
-
 
 
 
