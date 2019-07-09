@@ -44,5 +44,4 @@ val test13 = ((officiate([(Clubs,Jack),(Spades,Num(8))],
                          42);
                false) 
               handle IllegalMove => true)
-             
-             
+        

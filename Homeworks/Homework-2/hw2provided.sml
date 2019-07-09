@@ -140,10 +140,104 @@ fun score (listOfCards, target) =
 		end
 	end
 
+(* 2 (g) *)
+
+fun officiate (listofcards, moves_list, goal) =
+	let 
+		fun officiate_helper (listofcards, moves_held, held, goal) =
+			if sum_cards (held) > goal
+			then score (held, goal)
+			else
+				case (listofcards, moves_held, held, goal) of 
+					(_, [], _, _) => score (held, goal)
+					| ([], _, _, _) => score (held, goal)
+					| (card :: cards, move :: moves, held, goal) =>
+							case move of
+								Discard c =>
+								officiate_helper (listofcards, moves, remove_card
+									(held, c, IllegalMove), goal)
+								| Draw =>
+								officiate_helper (cards, moves, card :: held,
+									goal)
+	in officiate_helper (listofcards, moves_list, [], goal)
+	end
+
+(* 3 (a) *)
+
+fun card_value_one (aCard: card) =
+	let val (s: suit, r: rank) = aCard 
+	in
+		case r of
+			Ace => 11
+			| Num i => i
+			| _ => 10
+	end
+
+fun card_value_two (aCard: card) =
+	let val (s: suit, r: rank) = aCard 
+	in
+		case r of
+			Ace => 11
+			| Num i => i
+			| _ => 10
+	end
+
+fun sum_cards_one (listOfCards) =
+	let 
+		fun sum_cards_helper (lol, result) =
+			case lol of
+				[] => result
+				| hd :: tl => sum_cards_helper (tl, card_value_one (hd) +
+					result)
+	in
+		sum_cards_helper (listOfCards, 0)
+	end
+
+fun sum_cards_two (listOfCards) =
+	let 
+		fun sum_cards_helper (lol, result) =
+			case lol of
+				[] => result
+				| hd :: tl => sum_cards_helper (tl, card_value_two (hd) +
+					result)
+	in
+		sum_cards_helper (listOfCards, 0)
+	end
 
 
+fun score_one (listOfCards, target) =
+	let val total = sum_cards_one (listOfCards)
+	in
+		let val preliminary_score = if total > target 
+									then 3 * (total - target)
+									else (target - total)
+		in
+			if all_same_color (listOfCards)
+			then preliminary_score div 2
+			else preliminary_score
+		end
+	end
+
+fun score_two (listOfCards, target) =
+	let val total = sum_cards_two (listOfCards)
+	in
+		let val preliminary_score = if total > target 
+									then 3 * (total - target)
+									else (target - total)
+		in
+			if all_same_color (listOfCards)
+			then preliminary_score div 2
+			else preliminary_score
+		end
+	end
 
 
-
+fun score_challenge (listofcards, target) =
+	let val first = score_one (listofcards, target)
+		val second = score_two (listofcards, target)
+	in if first < second
+		then first
+		else second
+	end
 
 
