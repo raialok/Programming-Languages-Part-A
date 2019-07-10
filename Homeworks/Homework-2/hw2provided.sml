@@ -209,5 +209,3 @@ fun score_challenge (listofcards, target) =
 		then first
 		else second
 	end
-
-
