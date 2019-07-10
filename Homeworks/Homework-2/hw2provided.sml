@@ -10,26 +10,27 @@ fun same_string(s1 : string, s2 : string) =
 
 (* 1 (a) *)
 fun all_except_option (toFind, lst) =
-	let fun contains (toFind, lst) =
-		case lst of
-			[] => false
-			| hd :: tl => if same_string (hd, toFind)
-						  then true
-						  else contains (toFind, tl)
-	fun remove_element (toRemove, lst) =
-		case lst of
-			[] => []
-			| hd :: tl => if same_string (hd, toRemove)
-						  then remove_element (toRemove, tl)
-						  else hd :: remove_element (toRemove, tl)
+	let 
+		fun contains (lst) =
+			case lst of
+				[] => false
+				| hd :: tl => if same_string (hd, toFind)
+							  then true
+							  else contains (tl)
+		fun remove_element (lst) =
+			case lst of
+				[] => []
+				| hd :: tl => if same_string (hd, toFind)
+							  then remove_element (tl)
+							  else hd :: remove_element (tl)
 	in
-		case contains (toFind, lst) of
+		case contains (lst) of
 			false => NONE
-			| true => SOME (remove_element (toFind, lst))
+			| true => SOME (remove_element lst)
 	end
 
 (* 1 (b) *)
-fun get_substitutions1 (lstOflst: string list list, s: string) =
+fun get_substitutions1 (lstOflst, s) =
 	case lstOflst of
 		[] => []
 		| hd :: tl =>
@@ -38,30 +39,31 @@ fun get_substitutions1 (lstOflst: string list list, s: string) =
 				| SOME e => e @ get_substitutions1 (tl, s)
 
 (* 1 (c) *)
-fun get_substitutions2 (lstOflst: string list list, s: string) =
-	let fun substitution_helper (lol: string list list, s: string, result:
-		string list) =
-		case lol of
+fun get_substitutions2 (lstOflst, s) =
+	let 
+		fun substitution_helper (list_left, result) =
+		case list_left of
 			[] => result
 			| hd :: tl => case all_except_option (s, hd) of
-						  NONE => substitution_helper (tl, s, result)
-						  | SOME e => substitution_helper (tl, s, result @ e)
+						  	NONE => substitution_helper (tl, result)
+						  	| SOME e => substitution_helper (tl, result @ e)
 	in
-		substitution_helper (lstOflst, s, [])
+		substitution_helper (lstOflst, [])
 	end
 
 (* 1 (d) *)
-fun similar_names (lstOflst: string list list, {first:string, middle:string, 
-	last:string}) =
-	let val names = get_substitutions2 (lstOflst, first)
+fun similar_names (lstOflst, name) =
+	let 
+		val {first=f, middle=m, last=l} = name
+		val names = get_substitutions2 (lstOflst, f)
 		fun similar_names_helper (list_names, result) =
 			case list_names of
 				[] => result
-				| hd :: tl => similar_names_helper (tl, result @ [{first = hd,
-					last = last, middle = middle}])
+				| hd :: tl => 
+				similar_names_helper (tl, result @ [{first = hd, middle = m,
+					last = l}])
 	in
-		similar_names_helper (names, [{first = first, middle = middle,
-			last = last}])
+		similar_names_helper (names, [name])
 	end
 
 
@@ -79,30 +81,24 @@ exception IllegalMove
 (* Solutions for problem 2 *)
 
 (* 2 (a) *)
-fun card_color (aCard: card) =
-	let val (s: suit, r: rank) = aCard
-	in
-		case s of
-			Spades => Black
-			| Clubs => Black
-			| _ => Red
-	end
+fun card_color (aCard) =
+	case aCard of
+		(Clubs, _) => Black
+		| (Spades, _) => Black
+		| (Hearts, _) => Red
+		| (Diamonds, _) => Red
 
 (* 2 (b) *)
-fun card_value (aCard: card) =
-	let val (s: suit, r: rank) = aCard 
-	in
-		case r of
-			Ace => 11
-			| Num i => i
-			| _ => 10
-	end
+fun card_value (aCard) =
+	case aCard of
+		(_, Num i) => i
+		| (_, Ace) => 11
+		| _ => 10
 
 (* 2 (c) *)
 fun remove_card (listOfCards, c, e) =
 	case listOfCards of
 		[] => raise e
-		| [x] => if x = c then [] else remove_card ([], c, e)
 		| hd:: tl => if hd = c then tl
 					 else hd :: remove_card (tl, c, e)
 
@@ -111,24 +107,25 @@ fun all_same_color (listOfCards) =
 	case listOfCards of
 		[] => true
 		| [e] => true
-		| hd :: e :: tl => if card_color (hd) = card_color (e)
-						   then all_same_color (e :: tl)
+		| hd :: neck :: tl => if card_color hd = card_color neck
+						   then all_same_color (neck :: tl)
 						   else false
 
 (* 2 (e) *)
 fun sum_cards (listOfCards) =
 	let 
-		fun sum_cards_helper (lol, result) =
-			case lol of
+		fun sum_cards_helper (remaining, result) =
+			case remaining of
 				[] => result
-				| hd :: tl => sum_cards_helper (tl, card_value (hd) + result)
+				| hd :: tl => sum_cards_helper (tl, card_value hd + result)
 	in
 		sum_cards_helper (listOfCards, 0)
 	end
 
 (* 2 (f) *)
 fun score (listOfCards, target) =
-	let val total = sum_cards (listOfCards)
+	let 
+		val total = sum_cards (listOfCards)
 	in
 		let val preliminary_score = if total > target 
 									then 3 * (total - target)
@@ -141,29 +138,26 @@ fun score (listOfCards, target) =
 	end
 
 (* 2 (g) *)
-
 fun officiate (listofcards, moves_list, goal) =
 	let 
-		fun officiate_helper (listofcards, moves_held, held, goal) =
-			if sum_cards (held) > goal
-			then score (held, goal)
-			else
-				case (listofcards, moves_held, held, goal) of 
-					(_, [], _, _) => score (held, goal)(*
-					| ([], _, _, _) => score (held, goal)*)
-					| (card :: cards, move :: moves, held, goal) =>
-							case move of
-								Discard c =>
-								officiate_helper (listofcards, moves, remove_card
-									(held, c, IllegalMove), goal)
-								| Draw =>
-								officiate_helper (cards, moves, card :: held,
-									goal)
-	in officiate_helper (listofcards, moves_list, [], goal)
+		fun officiate_helper (remaining, moves_left, held) =
+			case moves_left of
+				[] => score (held, goal)
+				| Discard c :: tl => officiate_helper (remaining, tl,
+					remove_card
+					(held, c, IllegalMove))
+				| Draw :: tl => 
+					case remaining of
+						[] => score (held, goal)
+						| x :: xs => if sum_cards (x :: held) > goal
+									 then score (x :: held, goal)
+									 else officiate_helper (xs, tl, x :: held)
+	in officiate_helper (listofcards, moves_list, [])
 	end
 
-(* 3 (a) *)
+(* Challenge Problems *)
 
+(* 3 (a) *)
 fun card_value_one (aCard: card) =
 	let val (s: suit, r: rank) = aCard 
 	in
@@ -182,31 +176,19 @@ fun card_value_two (aCard: card) =
 			| _ => 10
 	end
 
-fun sum_cards_one (listOfCards) =
+fun sum_cards_challenge (listOfCards, card_value_type) =
 	let 
 		fun sum_cards_helper (lol, result) =
 			case lol of
 				[] => result
-				| hd :: tl => sum_cards_helper (tl, card_value_one (hd) +
+				| hd :: tl => sum_cards_helper (tl, card_value_type hd +
 					result)
 	in
 		sum_cards_helper (listOfCards, 0)
 	end
 
-fun sum_cards_two (listOfCards) =
-	let 
-		fun sum_cards_helper (lol, result) =
-			case lol of
-				[] => result
-				| hd :: tl => sum_cards_helper (tl, card_value_two (hd) +
-					result)
-	in
-		sum_cards_helper (listOfCards, 0)
-	end
-
-
-fun score_one (listOfCards, target) =
-	let val total = sum_cards_one (listOfCards)
+fun calculate_score_challenge (listOfCards, target, card_value_type) =
+	let val total = sum_cards_challenge (listOfCards, card_value_type)
 	in
 		let val preliminary_score = if total > target 
 									then 3 * (total - target)
@@ -217,25 +199,13 @@ fun score_one (listOfCards, target) =
 			else preliminary_score
 		end
 	end
-
-fun score_two (listOfCards, target) =
-	let val total = sum_cards_two (listOfCards)
-	in
-		let val preliminary_score = if total > target 
-									then 3 * (total - target)
-									else (target - total)
-		in
-			if all_same_color (listOfCards)
-			then preliminary_score div 2
-			else preliminary_score
-		end
-	end
-
 
 fun score_challenge (listofcards, target) =
-	let val first = score_one (listofcards, target)
-		val second = score_two (listofcards, target)
-	in if first < second
+	let 
+		val first = calculate_score_challenge (listofcards, target, card_value_one)
+		val second = calculate_score_challenge (listofcards, target, card_value_two)
+	in 
+		if first < second
 		then first
 		else second
 	end
