@@ -149,8 +149,8 @@ fun officiate (listofcards, moves_list, goal) =
 			then score (held, goal)
 			else
 				case (listofcards, moves_held, held, goal) of 
-					(_, [], _, _) => score (held, goal)
-					| ([], _, _, _) => score (held, goal)
+					(_, [], _, _) => score (held, goal)(*
+					| ([], _, _, _) => score (held, goal)*)
 					| (card :: cards, move :: moves, held, goal) =>
 							case move of
 								Discard c =>
