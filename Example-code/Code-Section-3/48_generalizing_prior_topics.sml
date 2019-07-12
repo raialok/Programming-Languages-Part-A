@@ -18,7 +18,7 @@ datatype exp = Constant of int
 
 fun true_of_all_constants(f,e) =
     case e of
-	Constant i => f i
+	    Constant i => f i
       | Negate e1 => true_of_all_constants(f,e1)
       | Add(e1,e2) => true_of_all_constants(f,e1)
 		      andalso true_of_all_constants(f,e2)
